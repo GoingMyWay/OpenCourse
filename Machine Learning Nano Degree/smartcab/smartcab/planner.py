@@ -18,8 +18,9 @@ class RoutePlanner(object):
         location = self.env.agent_states[self.agent]['location']
         heading = self.env.agent_states[self.agent]['heading']
         delta = (self.destination[0] - location[0], self.destination[1] - location[1])
-        if delta[0] == 0 and delta[1] == 0:
+        if delta[0] == 0 and delta[1] == 0:  # 到达终点
             return None
+        # 东西方向优先
         elif delta[0] != 0:  # EW difference
             if delta[0] * heading[0] > 0:  # facing correct EW direction
                 return 'forward'

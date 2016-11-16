@@ -213,7 +213,7 @@ class Environment(object):
 
     def act(self, agent, action):
         """
-        很重要的函数
+        执行action的函数
         :param agent:
         :param action:
         :return:
@@ -224,6 +224,9 @@ class Environment(object):
         state = self.agent_states[agent]
         location = state['location']
         heading = state['heading']
+        # 显示绿灯的条件
+        # 1. 如果intersections的状态是True(NS)，而且heading不能是EW
+        # 2. 如果intersections的状态是False(EW)，而且heading不能是NS
         light = 'green' if (self.intersections[location].state and heading[1] != 0) \
                            or ((not self.intersections[location].state) and heading[0] != 0) else 'red'
         inputs = self.sense(agent)
@@ -236,12 +239,12 @@ class Environment(object):
                 move_okay = False
         elif action == 'left':
             if light == 'green' and (inputs['oncoming'] is None or inputs['oncoming'] == 'left'):
-                heading = (heading[1], -heading[0])
+                heading = (heading[1], -heading[0])  # ???
             else:
                 move_okay = False
         elif action == 'right':
             if light == 'green' or inputs['left'] != 'forward':
-                heading = (-heading[1], heading[0])
+                heading = (-heading[1], heading[0])  # ???
             else:
                 move_okay = False
 
@@ -250,6 +253,7 @@ class Environment(object):
             if action is not None:
                 # Valid non-null move
                 # wrap-around
+                # 这里为什么要这么写，因为这样才能穿墙呀
                 location = (
                     (location[0]+heading[0]-self.bounds[0]) % (self.bounds[2]-self.bounds[0]+1)+self.bounds[0],
                     (location[1]+heading[1]-self.bounds[1]) % (self.bounds[3]-self.bounds[1]+1)+self.bounds[1])
@@ -274,7 +278,7 @@ class Environment(object):
                 print "Environment.act(): Primary agent has reached destination!"  # [debug]
             self.status_text = "state: {}\naction: {}\nreward: {}".format(agent.get_state(), action, reward)
             # print "Environment.act() [POST]: location: {}, heading: {}, action: {}, reward: {}".\
-            # format(location, heading, action, reward)  # [debug]
+            #     format(location, heading, action, reward)  # [debug]
 
         return reward
 
