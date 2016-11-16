@@ -81,7 +81,7 @@ class Environment(object):
         :return:
         """
         # 创建agent的实例
-        agent = agent_class(self, *args, **kwargs)
+        agent = agent_class(env=self, *args, **kwargs)
         # 设置agent的状态，包括location和heading
         self.agent_states[agent] = {'location': random.choice(self.intersections.keys()), 'heading': (0, 1)}
         return agent
@@ -253,7 +253,7 @@ class Environment(object):
             if action is not None:
                 # Valid non-null move
                 # wrap-around
-                # 这里为什么要这么写，因为这样才能穿墙呀
+                # 这里为什么要这么写，因为这样才能穿墙
                 location = (
                     (location[0]+heading[0]-self.bounds[0]) % (self.bounds[2]-self.bounds[0]+1)+self.bounds[0],
                     (location[1]+heading[1]-self.bounds[1]) % (self.bounds[3]-self.bounds[1]+1)+self.bounds[1])
@@ -324,15 +324,17 @@ class DummyAgent(Agent):
 
         action_okay = True
         # 不能通行的规则
-        # 这个规则不懂
+        # 如果往右边走但信号灯是红灯而且左边有车往右边通行，则车子不能动
         if self.next_waypoint == 'right':
             if inputs['light'] == 'red' and inputs['left'] == 'forward':
                 action_okay = False
-        # 如果向前走但前面是红灯，就不能通行
+        # 如果向前走但前面是红灯，则车子不能动
         elif self.next_waypoint == 'forward':
             if inputs['light'] == 'red':
                 action_okay = False
-        # 这个规则不懂
+        # 如果往左边走有两种情况车子不能走
+        # 1. 信号灯是红灯
+        # 2. 前面有车直行或右边有往左边行驶的车辆
         elif self.next_waypoint == 'left':
             if inputs['light'] == 'red' or (inputs['oncoming'] == 'forward' or inputs['oncoming'] == 'right'):
                 action_okay = False

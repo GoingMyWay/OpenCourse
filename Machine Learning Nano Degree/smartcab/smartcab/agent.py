@@ -26,11 +26,11 @@ class LearningAgent(Agent):
         deadline = self.env.get_deadline(self)
 
         # TODO: Update state
-        # location和heading??
-        # self.state = None
-        
+        self.state = self.env.agent_states[self]
+
         # TODO: Select action according to your policy
-        action = self.simple_action(inputs)
+        # 目前基于没Q-learning算法的规则选择的action
+        action = self.next_action(inputs)
 
         # Execute action and get reward
         reward = self.env.act(self, action)
@@ -40,9 +40,8 @@ class LearningAgent(Agent):
         print "LearningAgent.update(): deadline = {}, next_waypont = {}, inputs = {}, action = {}, reward = {}"\
             .format(deadline, self.next_waypoint, inputs, action, reward)  # [debug]
 
-    def simple_action(self, inputs):
+    def next_action(self, inputs):
         """
-        不以destination为目标，仅仅从当前的inputs判断哪个方向可以通行
         :param inputs:
         :return:
         """
@@ -78,9 +77,9 @@ def run():
     """Run the agent for a finite number of trials."""
 
     # Set up environment and agent
-    e = Environment(num_dummies=0)  # create environment (also adds some dummy traffic)
+    e = Environment(num_dummies=3)  # create environment (also adds some dummy traffic)
     a = e.create_agent(LearningAgent)  # create agent
-    a.add_env(e)
+    # a.add_env(e)
     e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
     # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
