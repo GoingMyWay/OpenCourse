@@ -19,3 +19,11 @@ In a terminal or command window, navigate to the top-level project directory `sm
 ```python -m smartcab.agent```
 
 This will run the `agent.py` file and execute your agent code.
+
+### output
+
+the following is the simple strategy output
+
+![output](https://raw.githubusercontent.com/GoingMyWay/OpenCourse/simple/Udacity/MLND/smartcab/images/output.gif)
+
+As you can see it, the silly cab is moving towards the destination!
