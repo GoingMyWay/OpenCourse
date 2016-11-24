@@ -78,14 +78,13 @@ class Simulator(object):
         for trial in range(n_trials):
             print "Simulator.run(): Trial {}".format(trial)  # [debug]
             self.env.reset()
-            self.current_time = 0.0
-            self.last_updated = 0.0
+            self.current_time, self.last_updated = 0.0, 0.0
             self.start_time = time.time()
             while True:
                 try:
                     # Update current time
                     self.current_time = time.time() - self.start_time
-                    # print "Simulator.run(): current_time = {:.3f}".format(self.current_time)
+                    print "Simulator.run(): current_time = {:.3f}".format(self.current_time)
 
                     # Handle GUI events
                     if self.display:
@@ -199,7 +198,7 @@ class Simulator(object):
         self.screen.blit(self.font.render(pause_text, True, self.colors['cyan'], self.bg_color),
                          (100, self.height - 40))
         self.pygame.display.flip()
-        print pause_text  # [debug]
+        # print pause_text  # [debug]
         while self.paused:
             for event in self.pygame.event.get():
                 if event.type == self.pygame.KEYDOWN:

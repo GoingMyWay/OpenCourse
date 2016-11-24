@@ -4,6 +4,7 @@ from environment import Agent, Environment
 from planner import RoutePlanner
 from simulator import Simulator
 
+import pandas as pd
 
 class ActionQValue(object):
     def __init__(self, action, q_value):
@@ -23,11 +24,9 @@ class LearningAgent(Agent):
         self.color = 'red'  # override color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
-        self.q_matrix, self.alpha, self.gamma, self.epsilon = dict(), 0.9, 0.3, 0.1
+        self.q_matrix, self.alpha, self.gamma, self.epsilon = dict(), 0.9, 0.6, 0.1
         self.pre_state, self.pre_action, self.pre_reward = None, None, None
-        self.default_q = 1
-        self.num_success = 0
-        self.env.acc = 0.0
+        self.default_q, self.num_success, self.env.acc = 1, 0, 0.0
 
     def reset(self, destination=None):
         """
@@ -83,23 +82,18 @@ class LearningAgent(Agent):
         :param state:
         :return:
         """
-        if self.__random_choice():
+        # 随机选择action
+        if random.random() < self.epsilon:
             action = random.choice(self.env.valid_actions)
             return ActionQValue(action, self.q_matrix.get((state, action), self.default_q))
         else:
             # 从Q-matrix中选择argmax_a'{Q(s',a')}的action
-            try:
-                _valid_actions = self.env.valid_actions
-                random.shuffle(_valid_actions)
-                _max_q = max([self.q_matrix.get((state, _action), self.default_q) for _action in _valid_actions])
-                for _action in _valid_actions:
-                    if self.q_matrix.get((state, _action), self.default_q) == _max_q:
-                        return ActionQValue(_action, _max_q)
-            except KeyError, e:
-                print(e.message)
-
-    def __random_choice(self):
-        return random.random() < self.epsilon
+            _valid_actions = self.env.valid_actions
+            random.shuffle(_valid_actions)
+            _max_q = max([self.q_matrix.get((state, _action), self.default_q) for _action in _valid_actions])
+            for _action in _valid_actions:
+                if self.q_matrix.get((state, _action), self.default_q) == _max_q:
+                    return ActionQValue(_action, _max_q)
 
     def update_state(self, inputs, next_waypoint):
         """
@@ -149,13 +143,18 @@ class LearningAgent(Agent):
             self.next_waypoint = self.planner.next_waypoint()
         return action
 
+    def set_pram(self, alpha=None, gamma=None, epsilon=None, tune=False):
+        if tune:
+            self.alpha, self.gamma, self.epsilon = alpha, gamma, epsilon
 
-def run():
+
+def run(alpha=None, gamma=None, epsilon=None, istune=False):
     """Run the agent for a finite number of trials."""
 
     # Set up environment and agent
     e = Environment(num_dummies=0)  # create environment (also adds some dummy traffic)
     a = e.create_agent(LearningAgent)  # create agent
+    a.set_pram(alpha=alpha, gamma=gamma, epsilon=epsilon, tune=istune)
     e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
     # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
@@ -167,6 +166,32 @@ def run():
     sim.run(n_trials=100)  # run for a specified number of trials
     # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
 
+    return a.env.acc, a.alpha, a.gamma, a.epsilon
 
 if __name__ == '__main__':
-    run()
+    outputs, output_data = pd.DataFrame(), []
+    tune = False 
+    alphas = [.5, .6, .7, .8, .9]
+    gammas = [.3, .4, .5, .6, .7]
+    epsilons = [.1, .2, .3, .4]
+    max_acc = -10000000
+    max_alpha, max_gamma, max_epsilon = 0, 0, 0
+    if tune:
+        for _a in alphas:
+            for _g in gammas:
+                for _e in epsilons:
+                    _avg_acc = 0
+                    for _i in range(10):
+                        acc, _alpha, _gamma, _epsilon = run(_a, _g, _e, tune)
+                        _avg_acc += acc
+                    _avg_acc /= 10.0
+                    print '{}, {}, {}, {}'.format(_alpha, _gamma, _epsilon, _avg_acc)
+                    output_data.append([_alpha, _gamma, _epsilon, _avg_acc])
+                    if acc >= max_acc:
+                        max_acc, max_alpha, max_gamma, max_epsilon = acc, _alpha, _gamma, _epsilon
+        outputs = pd.DataFrame(data=output_data, columns=['alpha', 'gamma', 'epsilon', 'accuracy'])
+        outputs.to_csv('output.csv')
+    else:
+        max_acc = run()
+    print 'the max_acc = {}, max_alpha = {}, max_gamma = {}, max_epsilon = {}'.\
+        format(max_acc, max_alpha, max_gamma, max_epsilon)

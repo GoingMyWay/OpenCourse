@@ -18,6 +18,7 @@ class TrafficLight(object):
 
     def update(self, t):
         if t - self.last_updated >= self.period:
+            # 切换交通灯的指向
             self.state = not self.state  # assuming state is boolean
             self.last_updated = t
 
@@ -82,7 +83,7 @@ class Environment(object):
         """
         # 创建agent的实例
         agent = agent_class(env=self, *args, **kwargs)
-        # 设置agent的状态，包括location和heading
+        # 设置agent的初始状态，包括location（随机产生）和heading（汽车的方向）
         self.agent_states[agent] = {'location': random.choice(self.intersections.keys()), 'heading': (0, 1)}
         return agent
 
@@ -117,6 +118,7 @@ class Environment(object):
         start = random.choice(self.intersections.keys())
         destination = random.choice(self.intersections.keys())
         # Ensure starting location and destination are not too close
+        # 保证起点和目的地的距离不能太近
         while self.compute_dist(start, destination) < 4:
             start = random.choice(self.intersections.keys())
             destination = random.choice(self.intersections.keys())
@@ -141,7 +143,7 @@ class Environment(object):
         这个函数是关键函数，但是目前还没看懂函数
         :return:
         """
-        # print "Environment.step(): t = {}".format(self.t)  # [debug]
+        print "Environment.step(): t = {}".format(self.t)  # [debug]
 
         # Update traffic lights
         for intersection, traffic_light in self.intersections.iteritems():
@@ -149,11 +151,12 @@ class Environment(object):
 
         # Update agents
         for agent in self.agent_states.iterkeys():
-            agent.update(self.t)
+            agent.update(self.t)  # 更新agent的状态
 
         if self.done:
             return  # primary agent might have reached destination
 
+        # 检查是否超时
         if self.primary_agent is not None:
             agent_deadline = self.agent_states[self.primary_agent]['deadline']
             if agent_deadline <= self.hard_time_limit:
@@ -277,8 +280,8 @@ class Environment(object):
                 self.done = True
                 print "Environment.act(): Primary agent has reached destination!"  # [debug]
             self.status_text = "state: {}\naction: {}\nreward: {}".format(agent.get_state(), action, reward)
-            # print "Environment.act() [POST]: location: {}, heading: {}, action: {}, reward: {}".\
-            #     format(location, heading, action, reward)  # [debug]
+            print "Environment.act() [POST]: location: {}, heading: {}, action: {}, reward: {}".\
+                format(location, heading, action, reward)  # [debug]
 
         return reward
 
@@ -344,6 +347,6 @@ class DummyAgent(Agent):
             action = self.next_waypoint
             self.next_waypoint = random.choice(Environment.valid_actions[1:])
         reward = self.env.act(self, action)
-        # print "DummyAgent.update(): t = {}, inputs = {}, action = {}, reward = {}".\
-        #     format(t, inputs, action, reward)  # [debug]
-        # print "DummyAgent.update(): next_waypoint = {}".format(self.next_waypoint)  # [debug]
+        print "DummyAgent.update(): t = {}, inputs = {}, action = {}, reward = {}".\
+            format(t, inputs, action, reward)  # [debug]
+        print "DummyAgent.update(): next_waypoint = {}".format(self.next_waypoint)  # [debug]
